@@ -1,6 +1,6 @@
 ﻿# SaferPay.NetCore Json Api V1.52
 
-This repository is an implementation of the [SaferPay.Net](https://github.com/bmbsqd/saferpay-net) library, with updates to use **.NetCore 8.0** and **RestSharp** instead of HttpClient. All methods have been extended with sync and async calls.
+This repository is an implementation of the [SaferPay.Net](https://github.com/bmbsqd/saferpay-net) library, with updates to use **.NET 8.0 / .NET 10.0** and **RestSharp** instead of HttpClient. All methods have been extended with sync and async calls.
 
 The implementation is based on the latest version of the JSON API, **v1.52**, which can be found at the following URL: http://saferpay.github.io/jsonapi/#ChapterTransaction
 
@@ -19,7 +19,7 @@ https://test.saferpay.com/BO/Login
 ```
 
 ### What's New
-+ Upgrade to `.NetCore 8.0`
++ Multi-targets `.NET 8.0` and `.NET 10.0`
 + HttpClient has been replaced by `RestSharp`
 + Updated to use the latest version of the JSON API, `v1.52`
 + Replaced `BaseUri` with `SandBox` mode. BaseUri is now generated based on SandBox mode for testing or live environments.
@@ -36,7 +36,7 @@ https://test.saferpay.com/BO/Login
 Implemented all methods:
 
 + **Payment Page Methods:** `Initialize`, `Assert`
-+ **Transaction Methods:** `Initialize`, `Authorize`, `AuthorizeDirect`, `AuthorizeReferenced`, `Capture`, `MultipartCapture`, `AssertCapture`, `MultipartFinalize`, `Refund`, `AssertRefund`, `RefundDirect`, `Cancel`, `RedirectPayment`, `AssertRedirectPayment`, `Inquire`, `AlternativePayment`, `QueryAlternativePayment`, `DccInquiry`        
++ **Transaction Methods:** `Initialize`, `Authorize`, `QueryPaymentMeans`, `AdjustAmount`, `AuthorizeDirect`, `AuthorizeReferenced`, `Capture`, `MultipartCapture`, `AssertCapture`, `MultipartFinalize`, `Refund`, `AssertRefund`, `RefundDirect`, `Cancel`, `RedirectPayment`, `AssertRedirectPayment`, `Inquire`, `AlternativePayment`, `QueryAlternativePayment`, `DccInquiry`
 + **Secure Card Data:** `Insert`, `AssertInsert`, `InsertDirect`, `Update`, `Delete`, `Inquire`
 + **Batch:** `Close`
 + **Omni Channel:** `InsertAlias`, `AcquireTransaction`
@@ -173,57 +173,17 @@ if (result != null && result.IsSuccess)
 }
 ```
 
+### Tests
+
+The solution ships with two projects under the repository root:
+
++ **`SaferPay.Tests`** : automated xUnit suite (`Unit` + sandbox `Integration` tests). Run it with:
+  ```bash
+  dotnet test SaferPay.Tests/SaferPay.Tests.csproj
+  ```
+  Integration tests run against `test.saferpay.com` using the public Viwo sandbox account by default. Override it with the `SAFERPAY_CUSTOMER_ID`, `SAFERPAY_TERMINAL_ID`, `SAFERPAY_USERNAME` and `SAFERPAY_PASSWORD` environment variables, or set `SAFERPAY_SKIP_INTEGRATION=1` for a fully offline run.
++ **`SaferPay.Test`** : interactive console playground that demonstrates the API end to end. See [`SaferPay.Test/README.md`](SaferPay.Test/README.md).
+
 ### Changelog
 
-`v1.52.01`
-+ Updated library target framework to `.NET 8.0`
-+ Removed unsupported `.NET 6.0` and legacy test runtime targets
-+ Improved overall package compatibility with current and future .NET runtimes
-+ Fixed recursive `Dispose()` implementation causing `StackOverflowException`
-+ Fixed missing `_jsonSerializerSettings` initialization in the 4-argument constructor
-+ Improved `RestClient` lifecycle management to prevent socket/resource leaks under load
-+ Fixed exception rethrow handling to preserve original stack traces
-+ Normalized `CreditCardExpiration` year handling across constructor, setters and parsing
-+ Fixed `CreditCardExpiration.Parse()` producing invalid `MMYYYY` values instead of `MMYY`
-+ Improved `CreditCardExpiration.ToString()` formatting consistency
-+ Updated package metadata and NuGet packaging configuration
-+ Improved GitHub Actions build, validation and NuGet publishing workflow
-+ Updated package validation and build pipeline for `.NET 8`
-+ General reliability, maintainability and runtime compatibility improvements
-
-`v1.52`
-+ Updated to use the latest version of the JSON API, `v1.52`
-+ Added `Saferpay Management API`.
-+ Added `PaymentPage GetConfigurations` method to Saferpay Management API
-+ Added `WITH_SUCCESSFUL_THREE_DS_CHALLENGE` as a valid value for the field Condition
-+ Added `MastercardTLID` to the `IssuerReference` container in the response
-+ removed `PayerId` from the `PayPal` container
-
-`v1.51`
-+ Updated to use the latest version of the JSON API, `v1.51`
-+ added `PAYPAL` as valid value for field Type in `Alias/Insert`
-+ added `ONLINE_CHALLENGED` as valid value for field Type of container `Check` in `Alias/Insert`
-+ removed `OK_AUTHENTICATED` as valid value from field `Result` of container `CheckResult`. 
-+ removed `INVOICE` as valid value from `PaymentMethods` in `PaymentPage/Initialize`
-+ added fields `Authenticated` and `AuthenticationType` to container `AuthenticationResult`. Removed field `Result` from container in return.
-+ added field `FundingSource` to container `Card`
-+ field `CountryCode` in container `ForeignRetailer` is now mandatory.
-
-`v1.50`
-+ Updated to use the latest version of the JSON API, `v1.50`
-+ Added value `ONLINE_STRONG` to Type in the `Check` container and added new container `ExternalThreeDS` in `Alias/InsertDirect`
-+ Added `GIFTCARD` as valid value for the field `PaymentMethods`
-+ Introduced a new function to provide Dynamic Currency Conversion (`DCC`) inquiry details for your customer: `Transaction\DccInquiry`
-+ The payment methods `GIROPAY`, `PAYDIREKT`, `SOFORT` and `WLCRYPTOPAYMENTS` are no longer supported.
-+ `Transaction/AuthorizeDirect` is extended with the new subcontainer `DCC`, which references the response from `Transaction/DccInquiry` and payer's decision whether he accepts or declines `DCC` offer
-+ Added `WERO` as valid value for the field `PaymentMethods`
-+ Added `HolderName` and `IBAN` to the BankAccount container in `PaymentPage/Assert`
-+ `Transaction/RefundDirect` is extended with the new subcontainer `BankAccount`. This is a required container for PostFinance Instant Payout
-
-`v1.46`
-+ Updated to use the latest version of the JSON API, `v1.46`
-+ Added new subcontainer `ExternalThreeDS` to container `Authentication`. This affects the following requests: `Transaction/AuthorizeDirect`
-+ Updated `AuthorizeDirect` method to use the new `ExternalThreeDS` subcontainer.
-
-`v1.45.01`
-+ Added `REKA` as alternative payment method to `PaymentPagePaymentMethods`.
+See [CHANGELOG.md](CHANGELOG.md) for the full version history.
