@@ -1,160 +1,40 @@
-# SaferPay.NetCore Json Api V1.36
+# SaferPay.NetCore Test & Examples (Json Api V1.52)
 
-This repository is an implementation of the `SaferPay.Net` library (`https://github.com/bmbsqd/saferpay-net`), with updates to use **.NetCore 6.0** and **RestSharp** instead of HttpClient, and all methods extented by sync and async call. 
+The two test projects for [SaferPay.NetCore](../README.md), built against the JSON API **v1.52** and targeting **.NET 8.0 / .NET 10.0**.
 
-The implementation is based on the latest version of the JSON API, v1.36, which can be found at the following URL: `http://saferpay.github.io/jsonapi/#ChapterTransaction`.
+For the full API reference and usage snippets, read the [root README](../README.md). This page only covers how to run the test artifacts.
 
-You can find Test Cards and explanation of usage at `https://docs.saferpay.com/home/integration-guide/testing-and-go-live#visa-and-v-pay`
+## Console playground (`SaferPay.Test`)
 
-### What's New
-+ Upgrade to `.NetCore 6.0`
-+ HttpClient has been replaced by `RestSharp`
-+ Updated to use the latest version of the JSON API, `v1.36`
-+ Replaced `BaseUri` with `SandBox` mode, and BaseUri is now generated based on SandBox mode for testing or live.
-+ Updated and improved constructors for easier usage.
-+ Added descriptions to Properties based on api document.
-+ Converted string properties to Enum values.
-+ Added Examples and Test Console App in Solution.
-+ Added Interface Channels to ease of usage.
-+ Added Extensions for most used methods directly use in client.
-+ Added `IsSuccess` and `Error` properties in ResultObject.
-+ Updated all enum values, models, interfaces.
+A small console app that wires up an `ISaferPayClient` against the SaferPay sandbox and lets you trigger requests from a menu (Payment Page, Transaction, Secure Card Data, ...). The bundled `success.html` / `failed.html` pages stand in for return URLs.
 
-### Methods
-+ Implemented all methods
-+ Payment Page Methods : `Initialize`, `Assert`
-+ Transaction Methods : `Initialize`, `Authorize`, `QueryPaymentMeans`, `AdjustAmount`, `AuthorizeDirect`, `AuthorizeReferenced`, `Capture`, `MultipartCapture`, `AssertCapture`, `MultipartFinalize`, `Refund`, `AssertRefund`, `RefundDirect`, `Cancel`, `RedirectPayment`, `AssertRedirectPayment`, `Inquire`, `AlternativePayment`, `QueryAlternativePayment`
-+ Secure Card Data : `Insert`, `AssertInsert`, `InsertDirect`, `Update`, `Delete`
-+ Batch : `Close`
-+ Omni Channel : `InsertAlias`, `AcquireTransaction`
+Run it from the repository root:
 
-### Global Settings and Usage (With Client Extensions)
-
-Define Settings;
-```csharp
-SaferPay.Config.Settings.Default.Username = "ApiUserName";
-SaferPay.Config.Settings.Default.Password = "ApiPassword";
-SaferPay.Config.Settings.Default.TerminalId = "TerminalId";
-SaferPay.Config.Settings.Default.CustomerId = "CustomerId";
-SaferPay.Config.Settings.Default.SandBox = true;
+```bash
+dotnet run --project SaferPay.Test
 ```
 
-Get Client Instance;
-```csharp
-ISaferPayClient Client = SaferPay.Config.Settings.Client();
+Sandbox credentials live in [`TestConfig.cs`](TestConfig.cs) and point at the public Viwo test account. Replace them with your own to test a real account.
+
+## Automated tests (`SaferPay.Tests`)
+
+The [`SaferPay.Tests`](../SaferPay.Tests) xUnit project holds the real test suite:
+
++ **Unit** : request/response building, routing, extensions, settings and value types (offline).
++ **Integration** : exercises the live HTTP pipeline against the SaferPay sandbox.
+
+Run everything from the repository root:
+
+```bash
+dotnet test SaferPay.Tests/SaferPay.Tests.csproj
 ```
 
-Initialize request for Payment Page;
-```csharp
-string OrderID = "123456";
+Integration tests use the public Viwo sandbox account by default. Override or skip them with environment variables:
 
-InitializePaymentPageRequest req = new InitializePaymentPageRequest();
-req.TerminalId = TestConfig.TerminalId;
-req.Payment = new Payment(123.45M, "TRY", OrderID);
-req.ReturnUrl = $"{TestConfig.WebPage}payment-page?orderId={OrderID}";
-```
-
-Call Api Async;
-```csharp
-var result = await Client.InitializePaymentPageAsync(req);
-if (result != null && result.IsSuccess)
-{
-    // Success
-    Console.Write("Response Successful : ");
-    Console.WriteLine(result.Json());
-}
-else if (result != null)
-{
-    // Failed
-    Console.Write("Response Failed : ");
-    Console.WriteLine(result.Error.Json());
-}
-else
-{
-    // Error
-    Console.Write("Error !");
-}
-```
-
-Call Api Sync;
-```csharp
-var result = Client.InitializePaymentPage(req);
-if (result != null && result.IsSuccess)
-{
-    // Success
-    Console.Write("Response Successful : ");
-    Console.WriteLine(result.Json());
-} else if(result != null)
-{
-    // Failed
-    Console.Write("Response Failed : ");
-    Console.WriteLine(result.Error.Json());
-} else
-{
-    // Error
-    Console.Write("Error !");
-}
-```
-  
-
-### Basic Usage With Interface Channels
-
-
-Initialize the ApiClient;
-```csharp
-ISaferPayClient Client = new SaferPayClient("CustomerId", "TerminalId", "UserName", "PassWord", true);
-```
-
-Get Interface Channel to use, example based on Transaction;
-```csharp
-ITransaction payment = Client.Transaction;
-```
-
-Created Credit Card request;
-```csharp
-string OrderID = "123456";
-
-InitializeRequest req = new InitializeRequest(TestConfig.TerminalId, 123.45M, "TRY", OrderID, $"{TestConfig.WebPage}transaction?orderId={OrderID}").SetCard("9010004150000009", 12, 30, "123", "Card Holder Name");
-```
-
-Call Api Async;
-```csharp
-var result = await payment.InitializeAsync(req);
-if (result != null && result.IsSuccess)
-{
-    // Success
-    Console.Write("Response Successful : ");
-    Console.WriteLine(result.Json());
-}
-else if (result != null)
-{
-    // Failed
-    Console.Write("Response Failed : ");
-    Console.WriteLine(result.Error.Json());
-}
-else
-{
-    // Error
-    Console.Write("Error !");
-}
-```
-
-Call Api Sync;
-```csharp
-var result = payment.Initialize(req);
-if (result != null && result.IsSuccess)
-{
-    // Success
-    Console.Write("Response Successful : ");
-    Console.WriteLine(result.Json());
-} else if(result != null)
-{
-    // Failed
-    Console.Write("Response Failed : ");
-    Console.WriteLine(result.Error.Json());
-} else
-{
-    // Error
-    Console.Write("Error !");
-}
-```
+| Variable | Purpose |
+| --- | --- |
+| `SAFERPAY_CUSTOMER_ID` | Override sandbox Customer Id |
+| `SAFERPAY_TERMINAL_ID` | Override sandbox Terminal Id |
+| `SAFERPAY_USERNAME` | Override sandbox API username |
+| `SAFERPAY_PASSWORD` | Override sandbox API password |
+| `SAFERPAY_SKIP_INTEGRATION` | Set to `1` to skip integration tests (fully offline run) |
